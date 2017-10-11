@@ -40,8 +40,9 @@ colnames(orthologs) <- species
 
 lapply(species, function(sp){
   genes_table <- genes[[sp]]
+  colnames(genes_table) <- c('name', 'chr', 'start', 'end', 'strand')
   path_to_save <- paste0('./data/base/', sp, '_genes.csv')
-  write.csv(genes_table, path_to_save, quote = F)
+  write.csv(genes_table, path_to_save, quote = F, row.names = F)
 })
 
-write.csv(orthologs, './data/base/orthologs.csv', quote = F)
+write.csv(orthologs, './data/base/orthologs.csv', quote = F, row.names = F)
