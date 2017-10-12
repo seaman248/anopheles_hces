@@ -3,50 +3,72 @@ library(dplyr)
 library(IRanges)
 library(GenomicRanges)
 
+source('./R/remap.R')
+
 # Examples
-sp_genes <- read.csv('./data/base/atroparvus_genes.csv')
-chr_to_el <- read.csv('./configs/chr_el_coordinates.csv', na.strings = 0) %>% filter(sp == 'atroparvus')
 
-sp_gr <- GRanges(
-  seqnames = sp_genes$chr,
-  ranges = IRanges(start = sp_genes$start, end = sp_genes$end, names = sp_genes$name),
-  strand = sp_genes$strand
-)
+scfs_on_els <- read.csv('./configs/chr_el_coordinates.csv')
 
-ce_gr <- GRanges(
-  seqnames = chr_to_el$el,
+scfs_on_els_gr <- GRanges(
+  seqnames = scfs_on_els$el,
   ranges = IRanges(
-    start = chr_to_el$el_start,
-    width = chr_to_el$chr_length,
-    names = chr_to_el$chr
+    start = scfs_on_els$el_start,
+    width = scfs_on_els$chr_length,
+    name = scfs_on_els$chr
   ),
-  strand = chr_to_el$strand
+  strand = scfs_on_els$strand,
+  spec = scfs_on_els$sp
 )
 
-genes_on_elements <- lapply(names(ce_gr), function(scf){
-  scf_on_el <- ce_gr[names(ce_gr) == scf]
-  genes_on_scf <- sp_gr[seqnames(sp_gr) == scf]
-  scf_strand <- as.character(unique(strand(scf_on_el)))
-  genes_on_el_ranges <- switch(scf_strand,
-    '+' = {
-      ranges(genes_on_scf) <- shift(ranges(genes_on_scf), start(scf_on_el)-1)
-    },
-    '-' = {
-      ranges(genes_on_scf) <- shift(reverse(ranges(genes_on_scf)), end(scf_on_el -1))
-      strand(genes_on_scf) <- invertStrand(strand(genes_on_scf))
-    },
-    '*' = NULL
-  )
-  data.frame(genes_on_scf) %>%
-    mutate(scf = seqnames, seqnames = unique(seqnames(scf_on_el)), names = names(genes_on_scf))
-}) %>%
-  bind_rows() %>%
-  makeGRangesFromDataFrame(keep.extra.columns = T)
-  
-viz_genes <- genes_on_elements[seqnames(genes_on_elements) == 1]
-viz_scaffolds <- ce_gr[seqnames(ce_gr) == 1]
 
-ggplot() +
-  geom_rect(data = data.frame(viz_scaffolds), aes(xmin = start, xmax = end, ymin = 0, ymax = 1, fill = strand), col = 'grey') +
-  geom_rect(data = data.frame(viz_genes), aes(xmin = start, xmax = end, ymin = 1, ymax = 2, col = scf)) +
-  theme_bw()
+split(scfs_on_els_gr, scfs_on_els$sp) %>% # Разделяем по видам
+  lapply(function(scf_on_els_gr){
+    
+    spec <- unique(scf_on_els_gr$spec) # Сохраняем вид
+  
+    genes_on_scf <- paste0('./data/base/', spec, '_genes.csv') %>% # Читаем гены на скэффолдах / хромосомах вида
+      read.csv()
+    
+    # Преобразуем их в GRanges
+    genes_on_scf_gr <- GRanges( 
+      seqnames = genes_on_scf$chr,
+      ranges = IRanges(
+        start = genes_on_scf$start,
+        end = genes_on_scf$end,
+        name = genes_on_scf$name
+      ),
+      strand = genes_on_scf$strand
+    )
+    
+    split(scf_on_els_gr, names(scf_on_els_gr)) %>% # Пошли теперь по скэффолдам / хромосомам
+      lapply(function(scf_on_els){
+        scf_on_els
+        # remap(genes_on_scf_gr, scf_on_els) # Ремапаем
+      })
+    
+  })
+
+
+
+ex_genes_on_scf <- GRanges(
+  seqnames = c('scf1', 'scf1'),
+  ranges = IRanges(
+    start = c(1, 300),
+    end = c(299, 600),
+    names = c('gene1', 'gene2')
+  ),
+  strand = c('+', '-')
+)
+
+
+ex_scf_on_el <- GRanges(
+  seqnames = c('el1'),
+  ranges = IRanges(
+    start = c(500),
+    end = c(3000),
+    names = c('scf1')
+  ),
+  strand = c('-')
+)
+
+remap(ex_genes_on_scf, ex_scf_on_el)
