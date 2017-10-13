@@ -21,7 +21,7 @@ scfs_on_els_gr <- GRanges(
 )
 
 
-split(scfs_on_els_gr, scfs_on_els$sp) %>% # Разделяем по видам
+genes_on_elements <- split(scfs_on_els_gr, scfs_on_els$sp) %>% # Разделяем по видам
   lapply(function(scf_on_els_gr){
     
     spec <- unique(scf_on_els_gr$spec) # Сохраняем вид
@@ -43,32 +43,10 @@ split(scfs_on_els_gr, scfs_on_els$sp) %>% # Разделяем по видам
     split(scf_on_els_gr, names(scf_on_els_gr)) %>% # Пошли теперь по скэффолдам / хромосомам
       lapply(function(scf_on_els){
         scf_on_els
-        # remap(genes_on_scf_gr, scf_on_els) # Ремапаем
-      })
+        remap(genes_on_scf_gr[seqnames(genes_on_scf_gr) == names(scf_on_els)], scf_on_els) # Ремапаем
+      }) %>%
+      GRangesList()
     
+  }) %>% lapply(function(sp_genes_on_elements){
+    unlist(sp_genes_on_elements, recursive = T, use.names = F)
   })
-
-
-
-ex_genes_on_scf <- GRanges(
-  seqnames = c('scf1', 'scf1'),
-  ranges = IRanges(
-    start = c(1, 300),
-    end = c(299, 600),
-    names = c('gene1', 'gene2')
-  ),
-  strand = c('+', '-')
-)
-
-
-ex_scf_on_el <- GRanges(
-  seqnames = c('el1'),
-  ranges = IRanges(
-    start = c(500),
-    end = c(3000),
-    names = c('scf1')
-  ),
-  strand = c('-')
-)
-
-remap(ex_genes_on_scf, ex_scf_on_el)
