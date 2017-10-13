@@ -15,9 +15,9 @@ remap <- function(genes_on_scf, scf_on_el){
   ## genes: (+++     ++++________) / + - true genes / _ - pseudogene gap
   
   if(runValue(strand(scf_on_el))[1] == '-'){
-    
+
     end_gap <- GRanges(
-      seqnames = names(ex_scf_on_el),
+      seqnames = names(scf_on_el),
       ranges = IRanges(
         start = max(end(genes_on_scf)+1),
         end = max(end(scf_on_el)),
@@ -25,12 +25,12 @@ remap <- function(genes_on_scf, scf_on_el){
       ),
       strand = c('*')
     )
-    
+
     genes_on_scf <- append(genes_on_scf, end_gap)
-    
+
     ranges(genes_on_scf) <- ranges(genes_on_scf) %>%
       reverse()
-    
+
     strand(genes_on_scf) <- invertStrand(strand(genes_on_scf))
   }
   
