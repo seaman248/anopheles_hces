@@ -15,6 +15,6 @@
 
 # source('./scripts/make_grimm_table.R')
 
-
-
+# Run GRIMM
+# source('./scripts/run_grimm.R')
 
