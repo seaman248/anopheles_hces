@@ -23,6 +23,6 @@ grimm_table <- lapply(1:length(genes), function(n){
 
 filepath <- './data/processed/grimm_input/grimm_input.tsv'
 con <- file(filepath, open = 'wt')
-writeLines(paste0('# Genome_', 1:length(names(genes)), ': ', names(genes)), con)
+writeLines(paste0('# genome', 1:length(names(genes)), ': ', names(genes)), con)
 write.table(grimm_table, con, quote = F, sep = '\t', col.names = F, row.names = F)
 close(con)
