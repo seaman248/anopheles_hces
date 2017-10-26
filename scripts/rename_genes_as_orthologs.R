@@ -2,7 +2,7 @@ orthologs <- read.csv('./data/base/orthologs.csv', na.strings = '') %>% na.omit(
 
 # Find replicates
 dup_orths <- unlist(apply(orthologs, 2, function(col){
-  which(duplicated(col) & duplicated(col, fromLast = T))
+  which(duplicated(col) | duplicated(col, fromLast = T))
 }))
 
 dup_orths <- dup_orths[!duplicated(dup_orths)]
